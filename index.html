@@ -7,64 +7,82 @@
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             height: 100vh;
             text-align: center;
-            background-color: #f0f0f0;
+            background: #f0f0f0; /* Light grey background */
+            color: #333; /* Dark grey text */
         }
 
         nav {
-            background-color: #333;
+            background: #e0e0e0; /* Slightly darker grey nav */
             display: flex;
             justify-content: center;
-            padding: 20px 0;
+            padding: 15px 0;
         }
 
         nav a {
-            color: white;
+            color: #333;
             text-decoration: none;
-            padding: 10px 20px;
-            margin: 0 10px;
-            background-color: #555;
-            border-radius: 5px;
+            padding: 8px 15px;
+            margin: 0 8px;
+            background: #d0d0d0; /* Even darker grey nav links */
+            border-radius: 18px;
+            transition: background 0.3s ease;
         }
 
         nav a:hover {
-            background-color: #777;
+            background: #c0c0c0;
         }
 
         .content {
             flex-grow: 1;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            margin: 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 2.5em;
+            color: #4CAF50; /* Green accent for title */
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .container {
             max-width: 800px;
             width: 100%;
             display: flex;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: flex-start;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .upload-box {
-            width: 250px;
-            height: 300px;
+            width: 280px;
+            height: 320px;
             border: 2px dashed #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            margin-right: 20px;
+            margin-right: 15px;
             position: relative;
-            background-color: #f0f0f0;
+            background: #f8f8f8;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border: 2px dashed #aaa;
         }
 
         .upload-box img {
@@ -74,46 +92,65 @@
             top: 0;
             left: 0;
             display: none;
+            object-fit: cover;
         }
 
         .output-display {
             flex-grow: 1;
-            height: 300px;
-            border: 1px solid #ccc;
+            height: 320px;
+            border: 1px solid #ddd;
             overflow-y: auto;
-            padding: 10px;
+            padding: 12px;
             text-align: left;
             margin-top: 0;
-            background-color: #f0f0f0;
+            background: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .recipe-buttons {
-            margin: 20px auto;
+            margin: 15px auto;
             text-align: center;
         }
 
         .recipe-buttons button {
-            padding: 15px 30px;
-            font-size: 16px;
-            margin: 5px;
+            padding: 12px 25px;
+            font-size: 15px;
+            margin: 4px;
             cursor: pointer;
+            background: #4CAF50; /* Green buttons */
+            color: white;
+            border: none;
+            border-radius: 18px;
+            transition: transform 0.2s ease;
+        }
+
+        .recipe-buttons button:hover {
+            transform: scale(1.03);
         }
 
         #resetButton {
-            margin: 10px auto;
-            padding: 10px 20px;
-            font-size: 14px;
+            margin: 8px auto;
+            padding: 8px 18px;
+            font-size: 13px;
             cursor: pointer;
             display: block;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 18px;
+            transition: background 0.3s ease;
+        }
+
+        #resetButton:hover {
+            background: #d0d0d0;
         }
 
         footer {
-            background-color: #333;
-            color: white;
+            background: #e0e0e0;
+            color: #333;
             text-align: center;
-            padding: 10px 0;
+            padding: 8px 0;
             width: 100%;
         }
 
@@ -125,11 +162,13 @@
 
         .instructions-block {
             flex: 1;
-            padding: 20px;
-            border: 1px solid #ccc;
-            margin: 10px;
+            padding: 18px;
+            border: 1px solid #ddd;
+            margin: 8px;
             text-align: left;
-            background-color: white;
+            background: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
@@ -142,7 +181,7 @@
         <h2>Hey, <br> What's Cooking?</h2>
         <div class="container">
             <div class="upload-box">
-                <label for="imageUpload" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                <label for="imageUpload" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; cursor: pointer;">
                     Click to upload an image
                 </label>
                 <input type="file" id="imageUpload" accept="image/*" style="display: none;">
@@ -153,7 +192,6 @@
         <div class="recipe-buttons" id="recipeButtons"></div>
         <button id="resetButton" onclick="resetApp()">Reset / Add Another Image</button>
     </div>
-
     <footer>
         <p>&copy; 2024 What's Cooking? All rights reserved.</p>
     </footer>
