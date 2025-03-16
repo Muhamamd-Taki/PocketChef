@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - What's Cooking?</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        nav {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #555;
+            border-radius: 5px;
+        }
+
+        nav a:hover {
+            background-color: #777;
+        }
+
+        .content {
+            flex-grow: 1;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            text-align: left; /* Align text to the left */
+        }
+
+        .content p {
+            max-width: 600px; /* Limit paragraph width for readability */
+            margin-bottom: 15px; /* Add spacing between paragraphs */
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+    </nav>
+    <div class="content">
+        <h1>About What's Cooking?</h1>
+        <p>
+            Welcome to What's Cooking? - your personal culinary assistant!
+        </p>
+        <p>
+            This application allows you to upload images of ingredients, and we'll suggest delicious recipes based on what you have.
+        </p>
+        <p>
+            Our goal is to make cooking easier and more enjoyable by helping you discover new meals with the ingredients you already have.
+        </p>
+        <p>
+            Simply upload an image, and let us do the rest! We use advanced image recognition and recipe databases to provide you with the best possible suggestions.
+        </p>
+        <p>
+            Enjoy cooking!
+        </p>
+    </div>
+    <footer>
+        <p>&copy; 2024 What's Cooking? All rights reserved.</p>
+    </footer>
+</body>
+</html>

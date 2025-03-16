@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's Cooking?</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        nav {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #555;
+            border-radius: 5px;
+        }
+
+        nav a:hover {
+            background-color: #777;
+        }
+
+        .content {
+            flex-grow: 1;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            margin-top: 20px;
+        }
+
+        .upload-box {
+            width: 250px;
+            height: 300px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 20px;
+            position: relative;
+            background-color: #f0f0f0;
+        }
+
+        .upload-box img {
+            max-width: 100%;
+            max-height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+
+        .output-display {
+            flex-grow: 1;
+            height: 300px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            padding: 10px;
+            text-align: left;
+            margin-top: 0;
+            background-color: #f0f0f0;
+        }
+
+        .recipe-buttons {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .recipe-buttons button {
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        #resetButton {
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            display: block;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+        .instructions-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .instructions-block {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ccc;
+            margin: 10px;
+            text-align: left;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+    </nav>
+    <div class="content">
+        <h2>Hey, <br> What's Cooking?</h2>
+        <div class="container">
+            <div class="upload-box">
+                <label for="imageUpload" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                    Click to upload an image
+                </label>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                <img id="uploadedImage" src="" alt="Uploaded Image">
+            </div>
+            <div class="output-display" id="outputDisplay"></div>
+        </div>
+        <div class="recipe-buttons" id="recipeButtons"></div>
+        <button id="resetButton" onclick="resetApp()">Reset / Add Another Image</button>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 What's Cooking? All rights reserved.</p>
+    </footer>
+
+    <script>
+        let selectedRecipe = null;
+        let detectedIngredients = [];
+        let firstSearch = true;
+        let suggestedRecipes = []; // Store multiple recipes
+
+        function addOutputMessage(message) {
+            const outputDisplay = document.getElementById('outputDisplay');
+            const messageElement = document.createElement('p');
+            messageElement.textContent = message;
+            outputDisplay.appendChild(messageElement);
+            outputDisplay.scrollTop = outputDisplay.scrollHeight;
+        }
+
+        async function detectIngredients(imageBase64) {
+            addOutputMessage("Detecting ingredients...");
+            try {
+                const response = await fetch('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyCjoGq9NcH7PfST7q0A7CJdOkwVwBAOXw8', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requests: [{
+                            image: { content: imageBase64 },
+                            features: [{ type: 'LABEL_DETECTION' }]
+                        }]
+                    })
+                });
+                const data = await response.json();
+                return data.responses[0].labelAnnotations.map(label => label.description);
+            } catch (error) {
+                addOutputMessage("Error detecting ingredients. Please try again.");
+                return [];
+            }
+        }
+
+        async function generateRecipes(ingredients) {
+            let searchMessage = firstSearch ? "Searching for recipes..." : "Searching for more recipes...";
+            addOutputMessage(searchMessage);
+            firstSearch = false;
+            try {
+                suggestedRecipes = await getRecipesFromMealDB(ingredients); // Store all recipes
+                if (suggestedRecipes.length > 0) {
+                    showRecipeButtons();
+                } else {
+                    addOutputMessage("No recipes found.");
+                    document.getElementById('recipeButtons').innerHTML = "";
+                }
+            } catch (error) {
+                addOutputMessage("Error generating recipes. Please try again.");
+            }
+        }
+
+        async function getRecipesFromMealDB(ingredients) {
+            const recipeSuggestions = [];
+            for (const ingredient of ingredients) {
+                const response = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
+                const data = await response.json();
+
+                if (data.meals) {
+                    for (const meal of data.meals) {
+                        const recipeDetails = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`);
+                        const recipeData = await recipeDetails.json();
+
+                        if (recipeData.meals && recipeData.meals.length > 0) {
+                            recipeSuggestions.push(recipeData.meals[0]);
+                        }
+                    }
+                }
+            }
+            return recipeSuggestions;
+        }
+
+        function showRecipeButtons() {
+            const buttonsDiv = document.getElementById('recipeButtons');
+            buttonsDiv.innerHTML = ""; // Clear previous buttons
+
+            if (suggestedRecipes.length > 0) {
+                for (let i = 0; i < Math.min(3, suggestedRecipes.length); i++) { // Show up to 3 recipes
+                    const recipe = suggestedRecipes[i];
+                    const button = document.createElement('button');
+                    button.textContent = `Recipe ${i + 1}: ${recipe.strMeal}`;
+                    button.onclick = function() {
+                        selectedRecipe = recipe;
+                        showInstructions();
+                    };
+                    buttonsDiv.appendChild(button);
+                }
+            }
+        }
+
+        async function showInstructions() {if (selectedRecipe) {
+                const instructions = selectedRecipe.strInstructions;
+                const instructionSentences = instructions.split('.');
+
+                let numberedInstructions = "";
+                let stepNumber = 1;
+
+                for (const sentence of instructionSentences) {
+                    const trimmedSentence = sentence.trim();
+                    if (trimmedSentence !== "") {
+                        numberedInstructions += `${stepNumber}. ${trimmedSentence}.<br>`;
+                        stepNumber++;
+                    }
+                }
+
+                const ingredientsList = getIngredientsList(selectedRecipe);
+
+                const instructionsContainer = document.createElement('div');
+                instructionsContainer.className = 'instructions-container';
+
+                const instructionsBlock = document.createElement('div');
+                instructionsBlock.className = 'instructions-block';
+                instructionsBlock.innerHTML = "Instructions:<br>" + numberedInstructions;
+
+                const ingredientsBlock = document.createElement('div');
+                ingredientsBlock.className = 'instructions-block';
+                ingredientsBlock.innerHTML = "Ingredients:<br>" + ingredientsList;
+
+                instructionsContainer.appendChild(instructionsBlock);
+                instructionsContainer.appendChild(ingredientsBlock);
+
+                document.getElementById('outputDisplay').innerHTML = "";
+                document.getElementById('outputDisplay').appendChild(instructionsContainer);
+                document.getElementById('recipeButtons').innerHTML = '<button onclick="showRecipeButtons()">Back to Recipes</button>'; // Back button
+            }
+        }
+
+        function getIngredientsList(recipe) {
+            let ingredientsList = "";
+            let majorIngredient = detectedIngredients[0]; // Assuming the first detected ingredient is the major one
+
+            for (let i = 1; i <= 20; i++) {
+                const ingredient = recipe[`strIngredient${i}`];
+                const measure = recipe[`strMeasure${i}`];
+                if (ingredient && ingredient.trim() !== "") {
+                    let formattedIngredient = `${measure ? measure + " " : ""}${ingredient}`;
+
+                    if (ingredient.toLowerCase() === majorIngredient.toLowerCase()) {
+                        formattedIngredient = `<strong>${formattedIngredient} (Major)</strong>`;
+                    }
+
+                    ingredientsList += formattedIngredient + "<br>";
+                }
+            }
+            return ingredientsList;
+        }
+
+        function clearRecipe() {
+            document.getElementById('recipeButtons').innerHTML = "";
+            selectedRecipe = null;
+            generateRecipes(detectedIngredients);
+        }
+
+        document.getElementById('imageUpload').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = async function() {
+                    const imageBase64 = reader.result;
+                    document.getElementById('uploadedImage').src = imageBase64;
+                    document.getElementById('uploadedImage').style.display = 'block';
+                    addOutputMessage("Processing image...");
+
+                    const ingredients = await detectIngredients(imageBase64.split(',')[1]);
+                    detectedIngredients = ingredients;
+                    // Removed: addOutputMessage("Detected ingredients: " + ingredients.join(", "));
+
+                    await generateRecipes(ingredients);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function resetApp() {
+            document.getElementById('outputDisplay').innerHTML = "";
+            document.getElementById('recipeButtons').innerHTML = "";
+            document.getElementById('uploadedImage').src = "";
+            document.getElementById('uploadedImage').style.display = 'none';
+            selectedRecipe = null;
+            detectedIngredients = [];
+            document.getElementById('imageUpload').value = "";
+            firstSearch = true;
+            suggestedRecipes = []; // Clear suggested recipes
+        }
+    </script>
+</body>
+</html>
